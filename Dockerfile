@@ -4,21 +4,27 @@ FROM python:3.10-slim
 # 安装系统依赖
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    sox libsox-dev build-essential cmake curl git \
-    && rm -rf /var/lib/apt/lists/*
+    sox libsox-dev build-essential cmake curl git  git-lfs\
+    && rm -rf /var/lib/apt/lists/* \
+    && git lfs install
 
 # 设置工作目录
 WORKDIR /app
 
-# 拷贝当前目录所有文件（含 CosyVoice、async_cosyvoice、模型等）
+# 1. 先 COPY requirements，便于缓存
+COPY requirements/ ./requirements/
+
+# 2. 安装 Python 依赖（如果 requirements 没变，就能缓存住）
+RUN pip install --upgrade pip && \
+    pip install pynini==2.1.5
+RUN pip install -r requirements/01-core.txt
+RUN pip install -r requirements/02-ml.txt
+RUN pip install -r requirements/03-optional.txt
+
+# 3. 然后再 COPY 剩下的代码
 COPY . .
 
-# 安装 Python 依赖
-RUN pip install --upgrade pip && \
-    pip install -r async_cosyvoice/requirements.txt && \
-    pip install pynini==2.1.5
+RUN chmod +x /app/entrypoint.sh
 
-
-# 设置默认启动命令
-EXPOSE 50000
-CMD ["python", "async_cosyvoice/runtime/async_grpc/server.py"]
+# 启动服务
+CMD ["sh", "-c", "./entrypoint.sh"]
