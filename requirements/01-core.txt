@@ -1,9 +1,0 @@
---extra-index-url https://pypi.nvidia.com/
-
-vllm==0.7.3
-pydantic==2.10.6
-torch==2.5.1
-torchaudio==2.5.1
-grpcio==1.57.0
-grpcio-tools==1.57.0
-protobuf==4.25
